@@ -669,10 +669,10 @@ public class TiUIImageView extends TiUIView implements OnLifecycleEvent, Handler
 		imageSources = new ArrayList<TiDrawableReference>();
 		if (object instanceof Object[]) {
 			for (Object o : (Object[]) object) {
-				imageSources.add(TiDrawableReference.fromObject(getProxy().getActivity(), o));
+				imageSources.add(makeImageSource(o));
 			}
 		} else {
-			imageSources.add(TiDrawableReference.fromObject(getProxy().getActivity(), object));
+			imageSources.add(makeImageSource(object));
 		}
 	}
 
@@ -680,6 +680,17 @@ public class TiUIImageView extends TiUIView implements OnLifecycleEvent, Handler
 	{
 		imageSources = new ArrayList<TiDrawableReference>();
 		imageSources.add(source);
+	}
+
+	private TiDrawableReference makeImageSource(Object object)
+	{
+		if (object instanceof FileProxy) {
+			return TiDrawableReference.fromFile(proxy.getActivity(), ((FileProxy) object).getBaseFile());
+		} else if (object instanceof String) {
+			return TiDrawableReference.fromUrl(proxy, (String) object);
+		} else {
+			return TiDrawableReference.fromObject(proxy.getActivity(), object);
+		}
 	}
 
 	private void setDefaultImageSource(Object object)
@@ -809,7 +820,7 @@ public class TiUIImageView extends TiUIView implements OnLifecycleEvent, Handler
 			// processProperties is also called from TableView, we need check if we changed before re-creating the
 			// bitmap
 			boolean changeImage = true;
-			TiDrawableReference source = TiDrawableReference.fromObject(getProxy().getActivity(), d.get(TiC.PROPERTY_IMAGE));
+			TiDrawableReference source = makeImageSource(d.get(TiC.PROPERTY_IMAGE));
 			if (imageSources != null && imageSources.size() == 1) {
 				if (imageSources.get(0).equals(source)) {
 					changeImage = false;
@@ -861,7 +872,7 @@ public class TiUIImageView extends TiUIView implements OnLifecycleEvent, Handler
 			view.setEnableZoomControls(TiConvert.toBoolean(newValue));
 		} else if (key.equals(TiC.PROPERTY_IMAGE)) {
 			if ((oldValue == null && newValue != null) || (oldValue != null && !oldValue.equals(newValue))) {
-				TiDrawableReference source = TiDrawableReference.fromObject(getProxy().getActivity(), newValue);
+				TiDrawableReference source = makeImageSource(newValue);
 				Object autoRotate = proxy.getProperty(TiC.PROPERTY_AUTOROTATE);
 				if (autoRotate != null && TiConvert.toBoolean(autoRotate)) {
 					view.setOrientation(source.getOrientation());
